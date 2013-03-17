@@ -188,23 +188,15 @@ module Sinatra
       def build!(&blk)
         session = Rack::Test::Session.new app
 
-        get = lambda { |path|
-          response = session.get(path)
-          out      = response.body
-          mtime    = Time.parse(response.headers['Last-Modified'])  if response.headers['Last-Modified']
-
-          [ out, mtime ]
-        }
-
         packages.each { |_, pack|
-          out, mtime = get[pack.path]
+          out, mtime = get(session, pack.path)
 
           write pack.path, out, mtime, &blk
           write pack.production_path, out, mtime, &blk
         }
 
         files.each { |path, local|
-          out, mtime = get[path]
+          out, mtime = get(session, path)
 
           write path, out, mtime, &blk
           write BusterHelpers.add_cache_buster(path, local), out, mtime, &blk
@@ -324,6 +316,14 @@ module Sinatra
       end
 
     private
+      def get(session, path)
+        response = session.get(path)
+        out      = response.body
+        mtime    = Time.parse(response.headers['Last-Modified'])  if response.headers['Last-Modified']
+
+        [ out, mtime ]
+      end
+
       # Returns a URI for a given file
       #     path = '/projects/x/app/css'
       #     to_uri('/projects/x/app/css/file.sass', '/styles', path) => '/styles/file.css'
