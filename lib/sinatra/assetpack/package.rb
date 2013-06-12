@@ -108,8 +108,7 @@ module Sinatra
         paths.map { |path|
           result = session.get(path)
           if result.body.respond_to?(:force_encoding)
-            response_encoding = result.content_type.split(/;\s*charset\s*=\s*/).last.upcase rescue 'ASCII-8BIT'
-            result.body.force_encoding(response_encoding).encode(Encoding.default_external || 'ASCII-8BIT')  if result.status == 200
+            result.body.force_encoding("ISO-8859-1").encode("UTF-8")  if result.status == 200
           else
             result.body  if result.status == 200
           end
